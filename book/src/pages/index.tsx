@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import BrowserOnly from '@docusaurus/BrowserOnly';
-import Robot from '../components/Robot';
 import TypingEffect from '../components/TypingEffect';
 import ParticleCanvas from '../components/ParticleCanvas';
 import SnakeAnimation from '../components/SnakeAnimation';
@@ -40,7 +39,6 @@ function HeroSection(): ReactNode {
             <div className="book-cover__title">AI<br />& DATA<br />SCIENCE</div>
             <div className="book-cover__grid" />
             <div className="book-cover__bottomline">BEGINNER EDITION</div>
-            <Robot />
           </div>
         </div>
       </div>

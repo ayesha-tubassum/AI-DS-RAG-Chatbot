@@ -276,34 +276,6 @@
   border-top: 1px solid rgba(247, 242, 232, 0.55);
 }
 
-/* ── Robot ── */
-.robot-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-  color: rgba(247, 242, 232, 0.9);
-  animation: float 3.4s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-14px); }
-}
-
-/* Blink: pupils close vertically then reopen */
-.robot-pupil {
-  animation: blink 4.2s ease-in-out infinite;
-}
-.robot-pupil--right {
-  animation-delay: 0.08s; /* tiny offset between pupils looks natural */
-}
-
-@keyframes blink {
-  0%, 40%, 100% { transform: scaleY(1); }
-  45%, 50%      { transform: scaleY(0.05); }
-  55%           { transform: scaleY(1); }
-}
-
 /* ─────────────────────────────────────────────
    "What's inside" section
 ───────────────────────────────────────────── */
@@ -416,8 +388,6 @@
    (belt-and-suspenders on top of the wildcard)
 ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .robot-container,
-  .robot-pupil,
   .typing-effect__cursor {
     animation: none;
   }
