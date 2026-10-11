@@ -153,7 +153,7 @@
   z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 6.5rem 2rem 5rem;
+  padding: 1.5rem 2rem 3rem;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   align-items: center;
@@ -220,6 +220,7 @@
   display: flex;
   justify-content: center;
   perspective: 1000px;
+  max-height: 68vh;
 }
 
 .book-cover {
