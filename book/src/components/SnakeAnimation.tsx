@@ -37,7 +37,9 @@ const SnakeAnimation: React.FC = () => {
     const resize = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
-      const { width, height } = parent.getBoundingClientRect();
+      // Cover the first screen: full hero width, height of the first viewport
+      const { width } = parent.getBoundingClientRect();
+      const height = window.innerHeight;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       canvas.style.width = `${width}px`;
@@ -66,8 +68,15 @@ const SnakeAnimation: React.FC = () => {
       // Advance head
       headX = (headX + dt * 0.04) % (w + SEGMENTS * SEGMENT_LEN);
 
-      const baseY = h * 0.75;
-      const amplitude = h * 0.06;
+      // Keep the head between 10% and 55% of the canvas (first screen) height
+      const MIN_Y = 0.10;
+      const MAX_Y = 0.55;
+      const baseY = h * (MIN_Y + MAX_Y) / 2;
+      const amplitude = h * (MAX_Y - MIN_Y) / 2;
+
+      // Soft glow so the snake is clearly visible
+      ctx.shadowColor = 'rgba(34,95,91,0.5)';
+      ctx.shadowBlur = 12;
 
       // Draw snake body as connected circles (tail → head)
       for (let i = SEGMENTS; i >= 0; i--) {
@@ -77,7 +86,7 @@ const SnakeAnimation: React.FC = () => {
         const sy = baseY + Math.sin((sx * 0.018) + (now * 0.001)) * amplitude;
         const progress = 1 - i / SEGMENTS; // 0 = tail, 1 = head
         const radius = 3 + progress * 5;
-        const opacity = 0.08 + progress * 0.18;
+        const opacity = 0.22 + progress * 0.3;
 
         ctx.beginPath();
         ctx.arc(sx, sy, radius, 0, Math.PI * 2);
@@ -89,9 +98,10 @@ const SnakeAnimation: React.FC = () => {
       const headY = baseY + Math.sin((headX * 0.018) + (now * 0.001)) * amplitude;
       ctx.beginPath();
       ctx.arc(headX, headY, 9, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(34,95,91,0.28)';
+      ctx.fillStyle = 'rgba(34,95,91,0.5)';
       ctx.fill();
-      // Eyes
+      // Eyes (drawn without the glow)
+      ctx.shadowBlur = 0;
       ctx.beginPath();
       ctx.arc(headX + 4, headY - 2, 2.5, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -127,9 +137,10 @@ const SnakeAnimation: React.FC = () => {
       aria-hidden="true"
       style={{
         position: 'absolute',
-        inset: 0,
+        top: 0,
+        left: 0,
         width: '100%',
-        height: '100%',
+        height: '100vh',
         pointerEvents: 'none',
         display: 'block',
       }}
