@@ -174,7 +174,7 @@
   max-width: 34rem;
   font-size: 1.22rem;
   line-height: 1.55;
-  margin: 0 0 1.6rem;
+  margin: 0 0 0.9rem;
   color: var(--home-muted);
 }
 
@@ -194,10 +194,11 @@
 /* ── Typing effect ── */
 .typing-effect {
   font-family: 'DM Mono', monospace;
-  font-size: 1.1rem;
+  font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+  font-weight: 700;
   color: var(--home-accent);
-  margin-bottom: 2rem;
-  min-height: 1.8em;
+  margin-bottom: 1rem;
+  min-height: 1.3em;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -207,7 +208,7 @@
   display: inline-block;
   animation: blink-cursor 0.9s step-end infinite;
   color: var(--home-accent);
-  font-weight: 400;
+  font-weight: 700;
 }
 
 @keyframes blink-cursor {
@@ -237,18 +238,37 @@
   overflow: hidden;
 }
 
+/* Gradient overlay: dark top + bottom, light middle — sits above image, below text */
+.book-cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 24, 24, 0.65) 0%,
+    rgba(8, 24, 24, 0.2) 40%,
+    rgba(8, 24, 24, 0.2) 60%,
+    rgba(8, 24, 24, 0.65) 100%
+  );
+}
+
 .book-cover__topline,
 .book-cover__bottomline {
   font-family: 'DM Mono', monospace;
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.12em;
-  opacity: 0.85;
+  opacity: 0.92;
+  position: relative;
+  z-index: 3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
 }
 
 .book-cover__title {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   font-family: 'Newsreader', Georgia, serif;
   font-size: clamp(2rem, 4.6vw, 3.1rem);
   font-weight: 500;
@@ -256,11 +276,13 @@
   line-height: 0.82;
   margin-top: auto;
   white-space: nowrap;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
 }
 
 .book-cover__grid {
   position: absolute;
   inset: 0;
+  z-index: 2;
   opacity: 0.23;
   background-image:
     linear-gradient(#d9e6c8 1px, transparent 1px),
@@ -272,7 +294,7 @@
 
 .book-cover__bottomline {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid rgba(247, 242, 232, 0.55);

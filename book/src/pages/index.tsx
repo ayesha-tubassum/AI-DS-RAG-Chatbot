@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import TypingEffect from '../components/TypingEffect';
@@ -35,6 +36,24 @@ function HeroSection(): ReactNode {
         </div>
         <div className="cover-wrap" aria-hidden="true">
           <div className="book-cover">
+            <img
+              src={useBaseUrl('/img/cover-texture.jpg')}
+              alt=""
+              aria-hidden="true"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: 0.5,
+                mixBlendMode: 'normal',
+                filter: 'saturate(0.9) contrast(1.05)',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
             <div className="book-cover__topline">A FIELD GUIDE TO</div>
             <div className="book-cover__title">AI<br />& DATA<br />SCIENCE</div>
             <div className="book-cover__grid" />
