@@ -267,6 +267,64 @@
   text-decoration: underline;
 }
 
+/* ── Suggested questions ────────────────────────────────────────────────────── */
+.suggestions {
+  padding: 0.25rem 0 0.5rem;
+}
+
+.suggestionsLabel {
+  margin: 0 0 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ifm-color-primary);
+}
+
+.suggestionsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.suggestionItem {
+  margin: 0;
+  padding: 0;
+}
+
+.suggestionChip {
+  width: 100%;
+  text-align: left;
+  background: var(--ifm-background-color);
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 0.45rem;
+  padding: 0.45rem 0.7rem;
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.84rem;
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  line-height: 1.4;
+}
+
+.suggestionChip:hover:not(:disabled) {
+  border-color: var(--ifm-color-primary);
+  background: color-mix(in srgb, var(--ifm-color-primary) 6%, var(--ifm-background-color));
+}
+
+.suggestionChip:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.suggestionChip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ── Input row ──────────────────────────────────────────────────────────────── */
 .inputRow {
   display: flex;

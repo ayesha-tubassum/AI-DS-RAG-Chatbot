@@ -183,6 +183,21 @@ function ChatMessage({ msg }: { msg: Message }): React.ReactElement {
   );
 }
 
+// ── Recommended questions ─────────────────────────────────────────────────────
+// All topics verified against book/docs before inclusion.
+const SUGGESTED_QUESTIONS: readonly string[] = [
+  'What is a variable in Python?',
+  'What is the difference between an integer and a float?',
+  'What is a float in Python?',
+  'What is exception handling in Python?',
+  'What are Python data types?',
+  'What is a string in Python?',
+  'How does a Python conditional statement work?',
+  'What is a Python list?',
+  'What is a loop in Python?',
+  'What is the difference between a list and a tuple?',
+] as const;
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 let _nextId = 1;
@@ -295,6 +310,49 @@ export default function BookChatbot(): React.ReactElement {
     }
   }, [apiUrl, draft, loading]);
 
+  // Send a specific question string directly (used by suggestion chips).
+  // Bypasses draft state so clicking a chip fires immediately.
+  const sendQuestion = useCallback(async (question: string) => {
+    if (loading) return;
+    setDraft('');
+    // Temporarily set draft to the question then call the shared send logic
+    // inline to avoid the stale-closure problem with `send`.
+    const trimmed = question.trim();
+    if (!trimmed || trimmed.length > 1000) return;
+
+    setLoading(true);
+    const thinkingId = nextId();
+    setMessages((prev) => [
+      ...prev,
+      { id: nextId(), kind: 'user', text: trimmed },
+      { id: thinkingId, kind: 'thinking', text: '' },
+    ]);
+
+    try {
+      const res = await fetch(`${apiUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: trimmed }),
+      });
+      setMessages((prev) => prev.filter((m) => m.id !== thinkingId));
+      if (!res.ok) {
+        setMessages((prev) => [...prev, { id: nextId(), kind: 'error', text: 'Could not reach the book assistant. Please make sure the backend is running and try again.' }]);
+        return;
+      }
+      const data = await res.json() as ApiResponse;
+      if (data.grounded) {
+        setMessages((prev) => [...prev, { id: nextId(), kind: 'answer', text: data.answer, sources: data.sources ?? [] }]);
+      } else {
+        setMessages((prev) => [...prev, { id: nextId(), kind: 'refusal', text: data.answer }]);
+      }
+    } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== thinkingId));
+      setMessages((prev) => [...prev, { id: nextId(), kind: 'error', text: 'Could not reach the book assistant. Please make sure the backend is running and try again.' }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiUrl, loading]);
+
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -343,15 +401,32 @@ export default function BookChatbot(): React.ReactElement {
 
           {/* Messages */}
           <div className={styles.messages} role="log" aria-live="polite">
-            {messages.length === 0 && (
-              <p className={styles.emptyHint}>
-                Ask anything about the book's content.
-              </p>
+            {messages.length === 0 ? (
+              <div className={styles.suggestions}>
+                <p className={styles.suggestionsLabel}>Recommended questions</p>
+                <ul className={styles.suggestionsList} role="list">
+                  {SUGGESTED_QUESTIONS.map((q) => (
+                    <li key={q} className={styles.suggestionItem}>
+                      <button
+                        className={styles.suggestionChip}
+                        onClick={() => sendQuestion(q)}
+                        disabled={loading}
+                        type="button"
+                      >
+                        {q}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <>
+                {messages.map((m) => (
+                  <ChatMessage key={m.id} msg={m} />
+                ))}
+                <div ref={bottomRef} />
+              </>
             )}
-            {messages.map((m) => (
-              <ChatMessage key={m.id} msg={m} />
-            ))}
-            <div ref={bottomRef} />
           </div>
 
           {/* Input row */}
