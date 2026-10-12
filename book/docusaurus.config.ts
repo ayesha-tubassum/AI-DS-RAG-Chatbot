@@ -24,6 +24,10 @@ const config: Config = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   future: {v4: true},
+  customFields: {
+    // Override at build time with: BOOK_API_URL=https://... npm run build
+    apiUrl: process.env.BOOK_API_URL ?? 'http://localhost:8000',
+  },
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
