@@ -5,7 +5,6 @@ import Layout from '@theme/Layout';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 import TypingEffect from '../components/TypingEffect';
 import ParticleCanvas from '../components/ParticleCanvas';
-import SnakeAnimation from '../components/SnakeAnimation';
 import { FeatureCards } from '../components/FeatureCard';
 
 const phrases = ['Learn Python.', 'Master Data Science.', 'Build AI projects.'];
@@ -15,7 +14,6 @@ function HeroSection(): ReactNode {
     <section className="book-hero" aria-labelledby="hero-title">
       <div className="book-hero__background">
         <ParticleCanvas />
-        <SnakeAnimation />
       </div>
       <div className="book-hero__content">
         <div className="book-hero__copy">
