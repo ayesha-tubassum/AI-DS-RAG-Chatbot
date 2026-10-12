@@ -1,5 +1,5 @@
 """
-scripts/ingest_book.py — ingest book/docs/**/*.md into Qdrant via Gemini embeddings.
+scripts/ingest_book.py -- ingest book/docs/**/*.md into Qdrant via Gemini embeddings.
 
 Usage (from ./backend with .venv active):
 
@@ -11,7 +11,7 @@ Usage (from ./backend with .venv active):
 
 Flags:
   --dry-run       Parse + chunk only; no API calls, no Qdrant writes.
-  --recreate      Delete and recreate the collection (asks for confirmation).
+  --recreate      Delete and recreate the collection (only if this flag is passed).
   --only FOLDER   Ingest only files inside docs/FOLDER.
   --limit-chunks N  Cap total chunks (for test runs).
 """
@@ -23,9 +23,14 @@ import asyncio
 import logging
 import sys
 import textwrap
-import time
 from collections import defaultdict
 from pathlib import Path
+
+# ── Windows console: force UTF-8 output so Unicode chars print correctly ──────
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Ensure backend package root is importable when run as a script.
 _ROOT = Path(__file__).resolve().parent.parent
@@ -38,6 +43,7 @@ from app.ingestion.chunker import Chunk, chunk_document
 from app.ingestion.clean import clean_mdx
 from app.ingestion.discover import ParsedDoc, discover_docs, validate_paths_against_sitemap
 from app.ingestion.embed_cache import EmbedCache
+from app.ingestion.mojibake import contains_mojibake, find_mojibake_samples
 from app.ingestion.vector_store import (
     delete_points,
     ensure_collection,
@@ -52,16 +58,10 @@ logger = logging.getLogger(__name__)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
-# Root of book docs, relative to this script's grandparent
-_DOCS_ROOT = _ROOT.parent / "book" / "docs"
-_SITEMAP = _ROOT.parent / "book" / "build" / "sitemap.xml"
+_DOCS_ROOT  = _ROOT.parent / "book" / "docs"
+_SITEMAP    = _ROOT.parent / "book" / "build" / "sitemap.xml"
 
-# Embedding batch size for the ingestion pipeline
-# Keep low to respect the Google free-tier RPM limit (~100 RPM).
-# Each batch = 1 API call.  20 texts/batch → ~3 calls/min at normal speed.
-EMBED_BATCH_SIZE = 20
-
-# Delay between embedding batches (seconds) — prevents hitting 100 RPM.
+EMBED_BATCH_SIZE  = 20
 EMBED_BATCH_DELAY = 1.5
 
 
@@ -69,13 +69,13 @@ EMBED_BATCH_DELAY = 1.5
 
 def _build_payload(chunk: Chunk) -> dict:
     return {
-        "title": chunk.title,
-        "section": chunk.section,
-        "path": chunk.page_path,
-        "source_file": chunk.source_file,
-        "module": chunk.module,
-        "chunk_index": chunk.chunk_index,
-        "text": chunk.text,
+        "title":        chunk.title,
+        "section":      chunk.section,
+        "path":         chunk.page_path,
+        "source_file":  chunk.source_file,
+        "module":       chunk.module,
+        "chunk_index":  chunk.chunk_index,
+        "text":         chunk.text,
         "content_hash": chunk.content_hash,
     }
 
@@ -88,10 +88,10 @@ def _token_estimate(text: str) -> int:
 def _truncate(text: str, max_chars: int = 200) -> str:
     if len(text) <= max_chars:
         return text
-    return text[:max_chars] + "…"
+    return text[:max_chars] + "..."
 
 
-# ── Dry-run report ────────────────────────────────────────────────────────────
+# ── Dry-run report ─────────────────────────────────────────────────────────────
 
 def _dry_run_report(
     docs: list[ParsedDoc],
@@ -99,15 +99,28 @@ def _dry_run_report(
     path_warnings: list[str],
     limit_chunks: int | None,
 ) -> None:
-    print("\n" + "=" * 70)
+    # Count mojibake chunks
+    mojibake_chunks = [c for c in all_chunks if contains_mojibake(c.text)]
+
+    print()
+    print("=" * 70)
     print("DRY-RUN REPORT")
     print("=" * 70)
 
     print(f"\nFiles found      : {len(docs)}")
     print(f"Chunks created   : {len(all_chunks)}")
-
     if limit_chunks:
         print(f"(chunk limit     : {limit_chunks} applied)")
+
+    # Mojibake report
+    print(f"\nMojibake chunks  : {len(mojibake_chunks)}", end="")
+    if len(mojibake_chunks) == 0:
+        print("  -- OK: no encoding corruption detected")
+    else:
+        print(f"  -- WARNING: {len(mojibake_chunks)} chunk(s) contain encoding corruption!")
+        for c in mojibake_chunks[:5]:
+            samples = find_mojibake_samples(c.text)
+            print(f"  ! {c.source_file}  chunk={c.chunk_index}  samples={samples}")
 
     # Token statistics
     sizes = [_token_estimate(c.text) for c in all_chunks]
@@ -129,30 +142,46 @@ def _dry_run_report(
     if path_warnings:
         print(f"\nPath validation warnings ({len(path_warnings)}):")
         for w in path_warnings:
-            print(f"  ⚠  {w}")
+            print(f"  WARNING: {w}")
     else:
-        print("\n✓ All paths validated against sitemap.xml")
+        print("\nOK: All paths validated against sitemap.xml")
 
-    # 3 sample chunks
-    print("\n" + "-" * 70)
+    # 3 sample chunks -- always include a module-08 chunk if available
+    print()
+    print("-" * 70)
     print("3 SAMPLE CHUNKS")
     print("-" * 70)
-    samples = all_chunks[:1] + (all_chunks[len(all_chunks)//2:len(all_chunks)//2+1]) + all_chunks[-1:]
-    seen = set()
+
+    m08_chunks = [c for c in all_chunks if "module-08" in c.module]
+    samples: list[Chunk] = []
+    if m08_chunks:
+        samples.append(m08_chunks[0])
+    # First and last chunk (skip if already in list)
+    for candidate in (all_chunks[0], all_chunks[-1]):
+        if not any(id(candidate) == id(s) for s in samples):
+            samples.append(candidate)
+    # If we don't have 3 yet, add middle
+    if len(samples) < 3 and len(all_chunks) > 2:
+        mid = all_chunks[len(all_chunks) // 2]
+        if not any(id(mid) == id(s) for s in samples):
+            samples.append(mid)
+    samples = samples[:3]
+
     for chunk in samples:
-        if chunk.chunk_index in seen:
-            continue
-        seen.add(id(chunk))
+        has_moji = contains_mojibake(chunk.text)
         print(f"\n  File    : {chunk.source_file}")
         print(f"  Path    : {chunk.page_path}")
         print(f"  Section : {chunk.section!r}")
         print(f"  Tokens  : ~{_token_estimate(chunk.text)}")
         print(f"  ID      : {chunk.point_id}")
+        print(f"  Mojibake: {'YES -- CORRUPTED' if has_moji else 'none'}")
         print(f"  Text    : {_truncate(chunk.text)!r}")
 
-    print("\n" + "=" * 70)
+    print()
+    print("=" * 70)
     print("Dry run complete. No API calls or Qdrant writes were made.")
-    print("=" * 70 + "\n")
+    print("=" * 70)
+    print()
 
 
 # ── Core pipeline ──────────────────────────────────────────────────────────────
@@ -167,8 +196,7 @@ async def run(args: argparse.Namespace) -> None:
     if args.only:
         docs = [d for d in docs if d.module == args.only]
         if not docs:
-            print(f"ERROR: No docs found in folder '{args.only}'. "
-                  f"Use the exact folder name, e.g. 'module-01-python-foundations'.")
+            print(f"ERROR: No docs found in folder '{args.only}'.")
             sys.exit(1)
         logger.info("Filtered to %d docs in '%s'", len(docs), args.only)
 
@@ -194,20 +222,31 @@ async def run(args: argparse.Namespace) -> None:
     path_warnings: list[str] = []
     if _SITEMAP.exists():
         path_warnings = validate_paths_against_sitemap(docs, _SITEMAP)
-        if path_warnings:
-            for w in path_warnings:
-                logger.warning("%s", w)
+        for w in path_warnings:
+            logger.warning("%s", w)
     else:
         logger.info("No sitemap.xml found; skipping path validation.")
 
-    # 4. Dry-run: stop here
+    # 4. Dry-run: report and stop
     if args.dry_run:
         _dry_run_report(docs, all_chunks, path_warnings, args.limit_chunks)
         return
 
-    # ── From here: real ingestion ──────────────────────────────────────────
+    # ── Real ingestion from here ───────────────────────────────────────────────
 
-    # 5. Ensure collection
+    # 5. Mojibake guard: refuse to ingest corrupted chunks
+    mojibake_chunks = [c for c in all_chunks if contains_mojibake(c.text)]
+    if mojibake_chunks:
+        print(f"\nERROR: {len(mojibake_chunks)} chunk(s) contain mojibake "
+              f"(encoding corruption). Ingestion aborted.")
+        print("Run with --dry-run to see which chunks are affected, "
+              "then fix the encoding issue and retry.")
+        for c in mojibake_chunks[:3]:
+            samples = find_mojibake_samples(c.text)
+            print(f"  ! {c.source_file}  chunk={c.chunk_index}  {samples}")
+        sys.exit(2)
+
+    # 6. Ensure collection
     if args.recreate:
         confirm = input(
             f"\nWARNING: --recreate will DELETE the collection "
@@ -220,12 +259,12 @@ async def run(args: argparse.Namespace) -> None:
 
     await ensure_collection(recreate=args.recreate)
 
-    # 6. Load embed cache
+    # 7. Load embed cache
     cache = EmbedCache()
     logger.info("Embed cache loaded: %d entries.", len(cache))
 
-    # 7. Separate cached from uncached chunks
-    to_embed: list[Chunk] = []
+    # 8. Separate cached from uncached
+    to_embed: list[Chunk]         = []
     cached_vectors: dict[str, list[float]] = {}
 
     for chunk in all_chunks:
@@ -236,25 +275,19 @@ async def run(args: argparse.Namespace) -> None:
             to_embed.append(chunk)
 
     skipped = len(all_chunks) - len(to_embed)
-    logger.info(
-        "Chunks to embed: %d  |  cached (skip): %d",
-        len(to_embed), skipped,
-    )
+    logger.info("Chunks to embed: %d  |  cached (skip): %d", len(to_embed), skipped)
 
-    # 8. Embed uncached chunks in batches
+    # 9. Embed uncached chunks in batches
     new_vectors: dict[str, list[float]] = {}
     failures = 0
 
     for i in range(0, len(to_embed), EMBED_BATCH_SIZE):
-        batch = to_embed[i: i + EMBED_BATCH_SIZE]
-        texts = [c.text for c in batch]
-        batch_num = i // EMBED_BATCH_SIZE + 1
+        batch      = to_embed[i : i + EMBED_BATCH_SIZE]
+        texts      = [c.text for c in batch]
+        batch_num  = i // EMBED_BATCH_SIZE + 1
         total_batches = (len(to_embed) + EMBED_BATCH_SIZE - 1) // EMBED_BATCH_SIZE
 
-        logger.info(
-            "Embedding batch %d/%d (%d texts)…",
-            batch_num, total_batches, len(texts),
-        )
+        logger.info("Embedding batch %d/%d (%d texts)...", batch_num, total_batches, len(texts))
         try:
             vectors = await embed_documents(texts)
             for chunk, vec in zip(batch, vectors):
@@ -270,11 +303,10 @@ async def run(args: argparse.Namespace) -> None:
         if i + EMBED_BATCH_SIZE < len(to_embed):
             await asyncio.sleep(EMBED_BATCH_DELAY)
 
-    # 9. Merge all vectors
-    all_vectors: dict[str, list[float]] = {**cached_vectors, **new_vectors}
+    # 10. Merge vectors
+    all_vectors = {**cached_vectors, **new_vectors}
 
-    # 10. Stale cleanup — find and remove points for changed/deleted chunks
-    # Group current chunks by source_file
+    # 11. Stale cleanup
     current_by_source: dict[str, set[str]] = defaultdict(set)
     for chunk in all_chunks:
         current_by_source[chunk.source_file].add(chunk.point_id)
@@ -289,10 +321,10 @@ async def run(args: argparse.Namespace) -> None:
         deleted = await delete_points(stale_ids)
         logger.info("Deleted %d stale points.", deleted)
 
-    # 11. Upsert
-    upload_ids: list[str] = []
-    upload_vecs: list[list[float]] = []
-    upload_payloads: list[dict] = []
+    # 12. Upsert
+    upload_ids:      list[str]         = []
+    upload_vecs:     list[list[float]] = []
+    upload_payloads: list[dict]        = []
 
     for chunk in all_chunks:
         vec = all_vectors.get(chunk.content_hash)
@@ -304,11 +336,12 @@ async def run(args: argparse.Namespace) -> None:
         upload_vecs.append(vec)
         upload_payloads.append(_build_payload(chunk))
 
-    uploaded = await upsert_chunks(upload_ids, upload_vecs, upload_payloads)
+    uploaded    = await upsert_chunks(upload_ids, upload_vecs, upload_payloads)
     total_count = await get_collection_count()
 
-    # 12. Final report
-    print("\n" + "=" * 70)
+    # 13. Final report
+    print()
+    print("=" * 70)
     print("INGESTION COMPLETE")
     print("=" * 70)
     print(f"  Files processed      : {len(docs)}")
@@ -320,10 +353,11 @@ async def run(args: argparse.Namespace) -> None:
     print(f"  Collection size now  : {total_count} points")
     if path_warnings:
         print(f"  Path warnings        : {len(path_warnings)}")
-    print("=" * 70 + "\n")
+    print("=" * 70)
+    print()
 
 
-# ── Entry point ───────────────────────────────────────────────────────────────
+# ── Entry point ────────────────────────────────────────────────────────────────
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -338,27 +372,10 @@ def _parse_args() -> argparse.Namespace:
             python scripts/ingest_book.py --only module-01-python-foundations --limit-chunks 20
         """),
     )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Parse and chunk only; no API calls, no Qdrant writes.",
-    )
-    parser.add_argument(
-        "--recreate",
-        action="store_true",
-        help="Delete and recreate the Qdrant collection (asks for confirmation).",
-    )
-    parser.add_argument(
-        "--only",
-        metavar="FOLDER",
-        help="Ingest only docs inside this module folder (e.g. module-01-python-foundations).",
-    )
-    parser.add_argument(
-        "--limit-chunks",
-        type=int,
-        metavar="N",
-        help="Cap total chunks (useful for small test runs).",
-    )
+    parser.add_argument("--dry-run",      action="store_true")
+    parser.add_argument("--recreate",     action="store_true")
+    parser.add_argument("--only",         metavar="FOLDER")
+    parser.add_argument("--limit-chunks", type=int, metavar="N")
     return parser.parse_args()
 
 

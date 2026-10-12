@@ -58,7 +58,7 @@ class EmbedCache:
         tmp = self._path.with_suffix(".tmp")
         try:
             with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(self._data, f)
+                json.dump(self._data, f, ensure_ascii=False)
             # Atomic rename
             os.replace(tmp, self._path)
             self._dirty = False

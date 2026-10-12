@@ -95,7 +95,7 @@ async def _generate_with_retry(
     config = types.GenerateContentConfig(
         response_mime_type="application/json",
         response_schema=_GenerationResponse,
-        temperature=0.0,          # deterministic — eliminates supported=false flips
+        temperature=0.1,          # deterministic — eliminates supported=false flips
         max_output_tokens=1024,
     )
 
