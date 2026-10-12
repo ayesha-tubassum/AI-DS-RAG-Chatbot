@@ -49,11 +49,11 @@ async def answer(question: str) -> ChatResponse:
     """
     settings = get_settings()
 
-    # ── Step 1 + 2: embed + retrieve ────────────────────────────────────
-    sources, passages = await retrieve(question)
+    # ── Step 1 + 2: embed + retrieve (with threshold applied) ────────────
+    result = await retrieve(question)
 
-    # ── Step 3: no evidence — refuse without calling generation ─────────
-    if not passages:
+    # ── Step 3: no evidence — refuse without calling generation ──────────
+    if not result.has_evidence:
         logger.info("No evidence found; returning refusal.")
         return ChatResponse(
             answer=REFUSAL_MESSAGE,
@@ -61,10 +61,10 @@ async def answer(question: str) -> ChatResponse:
             sources=[],
         )
 
-    # ── Step 4: build prompt and call Gemini ────────────────────────────
+    # ── Step 4: build prompt and call Gemini ─────────────────────────────
     context_block = "\n\n---\n\n".join(
         f"[{s.title} — {s.section}]\n{p}" if s.section else f"[{s.title}]\n{p}"
-        for s, p in zip(sources, passages)
+        for s, p in zip(result.sources, result.passages)
     )
 
     prompt = RAG_SYSTEM_PROMPT.format(context=context_block, question=question)
@@ -75,7 +75,6 @@ async def answer(question: str) -> ChatResponse:
             model=settings.generation_model,
             contents=prompt,
             config=types.GenerateContentConfig(
-                # Keep responses focused; this is a factual Q&A assistant.
                 temperature=0.2,
                 max_output_tokens=1024,
             ),
@@ -87,9 +86,9 @@ async def answer(question: str) -> ChatResponse:
     answer_text = response.text or REFUSAL_MESSAGE
     grounded = answer_text != REFUSAL_MESSAGE
 
-    # ── Step 5: return response ─────────────────────────────────────────
+    # ── Step 5: return response ───────────────────────────────────────────
     return ChatResponse(
         answer=answer_text,
         grounded=grounded,
-        sources=sources if grounded else [],
+        sources=result.sources if grounded else [],
     )

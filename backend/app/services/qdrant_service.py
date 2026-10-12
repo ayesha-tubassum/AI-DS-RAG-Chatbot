@@ -1,15 +1,16 @@
 """
 Qdrant vector database service.
 
-Uses AsyncQdrantClient (available since qdrant-client 1.6.1).
+Uses AsyncQdrantClient (qdrant-client 1.19.1).
 
-Payload schema stored per point:
-    {
-        "title":   str,   # chapter / page title
-        "section": str,   # sub-section heading (empty string if none)
-        "path":    str,   # Docusaurus URL path, e.g. "/module-01-python-foundations/variables-data-types"
-        "text":    str,   # the raw passage text (used for context building)
-    }
+Verified API:
+  client.query_points(
+      collection_name, query=list[float], limit, score_threshold, with_payload
+  ) → QueryResponse with .points: list[ScoredPoint]
+  ScoredPoint fields: id, score, payload (dict)
+
+Payload schema per point (set at ingestion time):
+    title, section, path, source_file, module, chunk_index, text, content_hash
 """
 
 import logging
@@ -38,30 +39,41 @@ async def search_similar(
     query_vector: list[float],
     top_k: int | None = None,
     score_threshold: float | None = None,
+    *,
+    client: AsyncQdrantClient | None = None,
 ) -> list[ScoredPoint]:
     """
     Search the Qdrant collection for passages most similar to ``query_vector``.
 
     Args:
-        query_vector: Embedding of the user's question.
-        top_k: Maximum number of results to return.  Defaults to settings.rag_top_k.
-        score_threshold: Minimum cosine similarity.  Defaults to settings.rag_score_threshold.
+        query_vector:    Embedding of the user's question (list of floats).
+        top_k:           Maximum number of results to return.
+                         Defaults to settings.rag_top_k.
+        score_threshold: Minimum cosine similarity to include.
+                         Defaults to settings.rag_score_threshold.
+                         Pass ``0.0`` to return ALL candidates without filtering
+                         (used by the evaluation script).
+        client:          Optional pre-built client; inject in tests to avoid
+                         real API calls.
 
     Returns:
-        A list of ScoredPoint objects, sorted by score descending.
-        Each point's ``.payload`` contains title, section, path, and text.
+        List of ScoredPoint objects sorted by score descending.
+        Each point's ``.payload`` contains: title, section, path, source_file,
+        module, chunk_index, text, content_hash.
 
     Raises:
-        NotConfiguredError: If Qdrant is not configured.
-        RetrievalError: If the search request fails.
+        NotConfiguredError: Qdrant is not configured.
+        RetrievalError:     Search request failed.
     """
     settings = get_settings()
     top_k = top_k if top_k is not None else settings.rag_top_k
     score_threshold = score_threshold if score_threshold is not None else settings.rag_score_threshold
 
-    client = _get_client()
+    resolved_client = client or _get_client()
+    close_client = client is None  # only close if we created it
+
     try:
-        results = await client.query_points(
+        results = await resolved_client.query_points(
             collection_name=settings.qdrant_collection,
             query=query_vector,
             limit=top_k,
@@ -70,22 +82,22 @@ async def search_similar(
         )
         return results.points
     except Exception as exc:
-        logger.error("Qdrant search failed: %s", type(exc).__name__)
+        logger.error("Qdrant query_points failed: %s", type(exc).__name__)
         raise RetrievalError(str(exc)) from exc
     finally:
-        await client.close()
+        if close_client:
+            await resolved_client.close()
 
 
 async def ensure_collection_exists() -> None:
     """
     Create the Qdrant collection if it does not already exist.
 
-    This is called from ingestion scripts, not from the API path.
-    Uses the embedding dimension from settings.
+    Called from ingestion scripts, not from the API path.
 
     Raises:
-        NotConfiguredError: If Qdrant is not configured.
-        RetrievalError: If the operation fails.
+        NotConfiguredError: Qdrant is not configured.
+        RetrievalError:     Operation failed.
     """
     settings = get_settings()
     client = _get_client()

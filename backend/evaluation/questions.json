@@ -1,0 +1,177 @@
+[
+  {
+    "question": "What is a variable in Python?",
+    "expected": "answer",
+    "topic": "Python variables — module-01"
+  },
+  {
+    "question": "What is the difference between a list and a tuple in Python?",
+    "expected": "answer",
+    "topic": "Python data structures — module-01"
+  },
+  {
+    "question": "How does a for loop work in Python?",
+    "expected": "answer",
+    "topic": "Loops and iterations — module-01"
+  },
+  {
+    "question": "What is a lambda function?",
+    "expected": "answer",
+    "topic": "Functions and lambda — module-01"
+  },
+  {
+    "question": "What is exception handling and how do you use try-except?",
+    "expected": "answer",
+    "topic": "Exception handling — module-01"
+  },
+  {
+    "question": "What is a NumPy array and why is it used in data science?",
+    "expected": "answer",
+    "topic": "NumPy core operations — module-02"
+  },
+  {
+    "question": "How do you handle missing values in a pandas DataFrame?",
+    "expected": "answer",
+    "topic": "Handling missing values — module-02"
+  },
+  {
+    "question": "What is the difference between mean, median and mode?",
+    "expected": "answer",
+    "topic": "Descriptive statistics — module-03"
+  },
+  {
+    "question": "What is overfitting in machine learning and how do you prevent it?",
+    "expected": "answer",
+    "topic": "ML pipeline / train-test split — module-04"
+  },
+  {
+    "question": "What is the difference between supervised and unsupervised learning?",
+    "expected": "answer",
+    "topic": "ML pipeline — module-04"
+  },
+  {
+    "question": "What is a decision tree and how does it work?",
+    "expected": "answer",
+    "topic": "Decision trees — module-04"
+  },
+  {
+    "question": "What is gradient boosting and how does XGBoost use it?",
+    "expected": "answer",
+    "topic": "Gradient boosting — module-04"
+  },
+  {
+    "question": "How does a neural network learn during training?",
+    "expected": "answer",
+    "topic": "Neural network fundamentals — module-05"
+  },
+  {
+    "question": "What is a convolutional neural network and when is it used?",
+    "expected": "answer",
+    "topic": "CNNs and computer vision — module-05"
+  },
+  {
+    "question": "What is MLOps and why is it important for deploying models?",
+    "expected": "answer",
+    "topic": "ML deployment concepts — module-06"
+  },
+  {
+    "question": "What is RAG (Retrieval-Augmented Generation)?",
+    "expected": "answer",
+    "topic": "RAG systems — module-08"
+  },
+  {
+    "question": "What is a transformer model in deep learning?",
+    "expected": "answer",
+    "topic": "Transformers — module-08"
+  },
+  {
+    "question": "What is an AI agent and what makes it agentic?",
+    "expected": "answer",
+    "topic": "Agentic AI — module-09"
+  },
+  {
+    "question": "What is Apache Spark and how does it differ from Hadoop MapReduce?",
+    "expected": "answer",
+    "topic": "Big data and Spark — module-07"
+  },
+  {
+    "question": "What is Docker and why is it used in ML deployment?",
+    "expected": "answer",
+    "topic": "Docker containers — module-06"
+  },
+  {
+    "question": "What is the capital of France?",
+    "expected": "refuse",
+    "topic": "Geography — out of book"
+  },
+  {
+    "question": "Give me a biryani recipe.",
+    "expected": "refuse",
+    "topic": "Cooking — out of book"
+  },
+  {
+    "question": "Who won the latest cricket World Cup?",
+    "expected": "refuse",
+    "topic": "Sports news — out of book"
+  },
+  {
+    "question": "What is the weather like in London today?",
+    "expected": "refuse",
+    "topic": "Weather — out of book"
+  },
+  {
+    "question": "Tell me about World War II.",
+    "expected": "refuse",
+    "topic": "History — out of book"
+  },
+  {
+    "question": "Who is currently the richest person in the world?",
+    "expected": "refuse",
+    "topic": "Current affairs — out of book"
+  },
+  {
+    "question": "What is the current price of Bitcoin?",
+    "expected": "refuse",
+    "topic": "Cryptocurrency prices — out of book"
+  },
+  {
+    "question": "Write a poem about the sea.",
+    "expected": "refuse",
+    "topic": "Creative writing — out of book"
+  },
+  {
+    "question": "How do I fix a car engine that won't start?",
+    "expected": "refuse",
+    "topic": "Automotive — out of book"
+  },
+  {
+    "question": "What is the best diet to lose weight quickly?",
+    "expected": "refuse",
+    "topic": "Health and diet — out of book"
+  },
+  {
+    "question": "Explain the architecture of the GPT-4 model in detail.",
+    "expected": "refuse",
+    "topic": "GPT-4 internals — tricky near-topic, not in book"
+  },
+  {
+    "question": "How does quantum computing work?",
+    "expected": "refuse",
+    "topic": "Quantum computing — tricky near-topic, not in book"
+  },
+  {
+    "question": "What is the difference between PyTorch and JAX for deep learning?",
+    "expected": "refuse",
+    "topic": "PyTorch vs JAX — tricky near-topic, not in book"
+  },
+  {
+    "question": "What are mixture-of-experts models and how do they scale?",
+    "expected": "refuse",
+    "topic": "MoE architecture — tricky near-topic, not in book"
+  },
+  {
+    "question": "How does AlphaFold predict protein structures?",
+    "expected": "refuse",
+    "topic": "AlphaFold / bioinformatics — tricky near-topic, not in book"
+  }
+]
