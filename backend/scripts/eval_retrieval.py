@@ -116,7 +116,7 @@ def _print_table(rows: list[Row], threshold: float) -> None:
         act = r["at_threshold"]
         # Mark wrong predictions
         correct = (e == "answer" and act == "ANSWER") or (e == "refuse" and act == "REFUSE")
-        flag = "  " if correct else " ✗"
+        flag = "  " if correct else " X"
         print(f"{q:<{col_q}}  {e:<{col_e}}  {sc:<{col_sc}}  {t:<{col_t}}  {act:<{col_a}}{flag}")
     print(sep)
 
@@ -327,7 +327,7 @@ async def main(args: argparse.Namespace) -> None:
         if wrong:
             print("  Incorrect predictions:")
             for r in wrong:
-                print(f"    ✗ [{r['expected']:6}] score={r['top1_score']:.4f}  {_trunc(r['question'], 55)}")
+                print(f"    X [{r['expected']:6}] score={r['top1_score']:.4f}  {_trunc(r['question'], 55)}")
 
     # ── Threshold suggestion ─────────────────────────────────────────────────
     _suggest_threshold(in_book_scores, out_scores)
