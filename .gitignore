@@ -29,6 +29,9 @@ htmlcov/
 qdrant_storage/
 qdrant_data/
 
+# ── Ingestion cache (content_hash → vector, never commit) ─────────────────────
+.cache/
+
 # ── Node / Docusaurus ─────────────────────────────────────────────────────────
 node_modules/
 book/.docusaurus/

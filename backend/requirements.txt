@@ -22,3 +22,6 @@ httpx==0.28.1
 pytest==8.3.5
 pytest-asyncio==0.25.3
 anyio==4.9.0
+
+# ── Ingestion ─────────────────────────────────────────────────────────────────
+python-frontmatter==1.1.0
