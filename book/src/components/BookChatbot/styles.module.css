@@ -325,6 +325,65 @@
   cursor: not-allowed;
 }
 
+/* ── Horizontal suggestions bar (shown during conversation) ─────────────────── */
+.suggestionsBar {
+  display: flex;
+  flex-direction: row;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  overflow-x: auto;
+  flex-shrink: 0;
+  border-top: 1px solid var(--ifm-toc-border-color);
+  /* Hide the scrollbar track visually but keep it functional */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ifm-toc-border-color) transparent;
+}
+
+.suggestionsBar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.suggestionsBar::-webkit-scrollbar-thumb {
+  background: var(--ifm-toc-border-color);
+  border-radius: 999px;
+}
+
+.suggestionsBar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Individual pill inside the horizontal bar */
+.pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid var(--ifm-color-primary);
+  border-radius: 999px;
+  padding: 0.28rem 0.75rem;
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ifm-color-primary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1.4;
+}
+
+.pill:hover:not(:disabled) {
+  background: var(--ifm-color-primary);
+  color: #fff;
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* ── Input row ──────────────────────────────────────────────────────────────── */
 .inputRow {
   display: flex;

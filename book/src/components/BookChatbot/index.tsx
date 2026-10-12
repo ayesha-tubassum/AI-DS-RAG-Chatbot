@@ -429,6 +429,26 @@ export default function BookChatbot(): React.ReactElement {
             )}
           </div>
 
+          {/* Horizontal pill bar — visible once the conversation has started */}
+          {messages.length > 0 && (
+            <div
+              className={styles.suggestionsBar}
+              aria-label="Recommended questions"
+            >
+              {SUGGESTED_QUESTIONS.map((q) => (
+                <button
+                  key={q}
+                  className={styles.pill}
+                  onClick={() => sendQuestion(q)}
+                  disabled={loading}
+                  type="button"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Input row */}
           <div className={styles.inputRow}>
             <textarea
