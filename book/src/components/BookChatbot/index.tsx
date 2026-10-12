@@ -311,11 +311,13 @@ export default function BookChatbot(): React.ReactElement {
       <button
         className={styles.fab}
         onClick={() => setOpen((v) => !v)}
-        aria-label="Ask the book"
+        aria-label="Ask AI"
+        title="Ask AI"
         aria-expanded={open}
         aria-haspopup="dialog"
       >
         <ChatIcon />
+        <span className={styles.fabLabel}>Ask AI</span>
       </button>
 
       {/* Chat panel */}
@@ -329,7 +331,7 @@ export default function BookChatbot(): React.ReactElement {
         >
           {/* Header */}
           <div className={styles.header}>
-            <span className={styles.headerTitle}>Ask the book</span>
+            <span className={styles.headerTitle}>Ask AI</span>
             <button
               className={styles.closeBtn}
               onClick={() => setOpen(false)}

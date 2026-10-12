@@ -1,29 +1,39 @@
-/* ── Floating action button ────────────────────────────────────────────────── */
+/* ── Floating action button (pill) ─────────────────────────────────────────── */
 .fab {
   position: fixed;
   bottom: 1.75rem;
   right: 1.75rem;
   z-index: 9000;
 
-  width: 3.25rem;
-  height: 3.25rem;
-  border-radius: 50%;
+  /* Pill shape */
+  height: 2.75rem;
+  padding: 0 1.125rem;           /* ~18px horizontal padding */
+  border-radius: 999px;
+  gap: 0.5rem;                   /* ~8px gap between icon and text */
 
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 
   background: var(--ifm-color-primary);
   color: #fff;
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.fabLabel {
+  font-size: 0.9375rem;          /* ~15px */
+  font-weight: 600;
+  line-height: 1;
 }
 
 .fab:hover {
   background: var(--ifm-color-primary-dark);
-  transform: scale(1.07);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 22px rgba(0, 0, 0, 0.30);
 }
 
 .fab:focus-visible {
@@ -326,10 +336,12 @@
   .thinkingDots span {
     animation: none;
   }
-  .fab,
-  .fab:hover {
+  .fab {
     transition: none;
+  }
+  .fab:hover {
     transform: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
   }
 }
 
@@ -344,7 +356,9 @@
   }
 
   .fab {
-    right: 1rem;
-    bottom: 1rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    /* Slightly reduce padding on tiny screens so the pill fits comfortably */
+    padding: 0 0.875rem;
   }
 }
