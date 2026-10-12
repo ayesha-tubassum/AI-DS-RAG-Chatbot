@@ -1,0 +1,24 @@
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+
+# ── Google Gen AI SDK (embeddings + generation via Gemini API) ────────────────
+# google-genai 2.x is the new official SDK (replaces google-generativeai).
+# Provides: genai.Client, client.aio.models.embed_content, generate_content.
+google-genai==2.29.0
+
+# ── Qdrant vector database client ─────────────────────────────────────────────
+# AsyncQdrantClient available since 1.6.1; using latest stable.
+qdrant-client==1.19.1
+
+# ── Configuration & validation ────────────────────────────────────────────────
+pydantic==2.14.1
+pydantic-settings==2.9.1
+
+# ── HTTP client (used internally by google-genai and qdrant-client) ───────────
+httpx==0.28.1
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.5
+pytest-asyncio==0.25.3
+anyio==4.9.0
