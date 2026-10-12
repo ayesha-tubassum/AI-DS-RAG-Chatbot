@@ -172,6 +172,66 @@
   {
     "question": "How does AlphaFold predict protein structures?",
     "expected": "refuse",
-    "topic": "AlphaFold / bioinformatics — tricky near-topic, not in book"
+    "topic": "AlphaFold / bioinformatics -- tricky near-topic, not in book"
+  },
+  {
+    "question": "what is float",
+    "expected": "answer",
+    "topic": "float data type -- module-01 (SHORT QUERY)"
+  },
+  {
+    "question": "what is a list",
+    "expected": "answer",
+    "topic": "Python list -- module-01 (SHORT QUERY)"
+  },
+  {
+    "question": "what is a loop",
+    "expected": "answer",
+    "topic": "Python loops -- module-01 (SHORT QUERY)"
+  },
+  {
+    "question": "what is pandas",
+    "expected": "answer",
+    "topic": "pandas library -- module-02 (SHORT QUERY)"
+  },
+  {
+    "question": "what is overfitting",
+    "expected": "answer",
+    "topic": "overfitting -- module-04 (SHORT QUERY)"
+  },
+  {
+    "question": "what is a function",
+    "expected": "answer",
+    "topic": "Python functions -- module-01 (SHORT QUERY)"
+  },
+  {
+    "question": "weather today",
+    "expected": "refuse",
+    "topic": "Weather -- out of book (SHORT QUERY)"
+  },
+  {
+    "question": "biryani recipe",
+    "expected": "refuse",
+    "topic": "Cooking -- out of book (SHORT QUERY)"
+  },
+  {
+    "question": "bitcoin price",
+    "expected": "refuse",
+    "topic": "Cryptocurrency -- out of book (SHORT QUERY)"
+  },
+  {
+    "question": "capital of France",
+    "expected": "refuse",
+    "topic": "Geography -- out of book (SHORT QUERY)"
+  },
+  {
+    "question": "who won the match",
+    "expected": "refuse",
+    "topic": "Sports -- out of book (SHORT QUERY)"
+  },
+  {
+    "question": "write a poem",
+    "expected": "refuse",
+    "topic": "Creative writing -- out of book (SHORT QUERY)"
   }
 ]

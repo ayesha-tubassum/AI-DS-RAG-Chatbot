@@ -221,7 +221,8 @@ async def answer(question: str) -> ChatResponse:
     )
 
     # ── Gate 2: grounded generation ───────────────────────────────────────────
-    # Build numbered chunk list for the prompt
+    # Build numbered chunk list for the prompt.
+    # IMPORTANT: use original_question (no suffix) for the generation prompt.
     numbered_chunks_parts: list[str] = []
     for i, (src, passage) in enumerate(
         zip(retrieval_result.sources, retrieval_result.passages)
@@ -234,7 +235,7 @@ async def answer(question: str) -> ChatResponse:
     numbered_chunks = "\n\n".join(numbered_chunks_parts)
     prompt = GENERATION_PROMPT.format(
         numbered_chunks=numbered_chunks,
-        question=question,
+        question=retrieval_result.original_question,   # ← original, no suffix
     )
 
     client = _get_client()

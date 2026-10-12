@@ -386,3 +386,238 @@ class TestRetrieveCandidates:
         c = candidates[0]
         for field in ("score", "title", "section", "path", "source_file", "module", "text", "chunk_index"):
             assert field in c, f"Missing field: {field}"
+
+
+# ── Query expansion ────────────────────────────────────────────────────────────
+
+from app.services.retrieval import (
+    SHORT_QUERY_SUFFIX,
+    SHORT_QUERY_WORD_LIMIT,
+    build_search_text,
+    _word_count_for_expansion,
+)
+
+
+class TestQueryExpansion:
+    """Unit tests for the short-query expansion logic — no mocks needed."""
+
+    # ── build_search_text ──────────────────────────────────────────────────────
+
+    def test_short_query_gets_suffix(self):
+        result = build_search_text("what is float")
+        assert result == f"what is float {SHORT_QUERY_SUFFIX}"
+
+    def test_long_query_unchanged(self):
+        q = "What is the difference between supervised and unsupervised learning?"
+        assert build_search_text(q) == q
+
+    def test_exactly_at_limit_gets_suffix(self):
+        # 6 words — at the limit, should expand
+        q = "one two three four five six"
+        assert q not in build_search_text(q) or SHORT_QUERY_SUFFIX in build_search_text(q)
+        result = build_search_text(q)
+        assert result.endswith(SHORT_QUERY_SUFFIX)
+
+    def test_one_over_limit_unchanged(self):
+        # 7 words — just over the limit
+        q = "one two three four five six seven"
+        assert build_search_text(q) == q
+
+    def test_trailing_question_mark_ignored_for_count(self):
+        # "what is float?" = 3 words (? stripped), should still expand
+        q = "what is float?"
+        result = build_search_text(q)
+        assert SHORT_QUERY_SUFFIX in result
+
+    def test_no_question_mark_short_gets_suffix(self):
+        assert SHORT_QUERY_SUFFIX in build_search_text("what is pandas")
+
+    def test_suffix_is_named_constant(self):
+        # Verify the constant is importable and non-empty
+        assert isinstance(SHORT_QUERY_SUFFIX, str)
+        assert len(SHORT_QUERY_SUFFIX) > 0
+
+    # ── _word_count_for_expansion ─────────────────────────────────────────────
+
+    def test_word_count_strips_trailing_question_mark(self):
+        assert _word_count_for_expansion("what is float?") == 3
+
+    def test_word_count_no_question_mark(self):
+        assert _word_count_for_expansion("what is float") == 3
+
+    def test_word_count_long_question(self):
+        assert _word_count_for_expansion(
+            "What is the difference between a list and a tuple?"
+        ) == 10
+
+
+class TestQueryExpansionIntegration:
+    """Verify the suffix reaches embed_query and that original is preserved."""
+
+    @pytest.fixture(autouse=True)
+    def patch_settings(self):
+        with patch("app.services.retrieval.get_settings", return_value=_WITH_KEYS_SETTINGS):
+            with patch("app.services.qdrant_service.get_settings", return_value=_WITH_KEYS_SETTINGS):
+                yield
+
+    @pytest.mark.asyncio
+    async def test_short_query_embeds_with_suffix(self):
+        """embed_query must be called with the expanded text for a short query."""
+        captured_texts: list[str] = []
+
+        async def fake_embed(text: str, **kwargs):
+            captured_texts.append(text)
+            return _unit_vec()
+
+        with patch("app.services.retrieval.emb_service.embed_query",
+                   side_effect=fake_embed), \
+             patch("app.services.retrieval.qdrant_service.search_similar",
+                   new_callable=AsyncMock, return_value=[]):
+            await retrieve("what is float")
+
+        assert len(captured_texts) == 1
+        assert SHORT_QUERY_SUFFIX in captured_texts[0]
+        assert "what is float" in captured_texts[0]
+
+    @pytest.mark.asyncio
+    async def test_long_query_embeds_without_suffix(self):
+        """embed_query must be called with the exact question for a long query."""
+        captured_texts: list[str] = []
+
+        async def fake_embed(text: str, **kwargs):
+            captured_texts.append(text)
+            return _unit_vec()
+
+        long_q = "What is the difference between supervised and unsupervised learning?"
+        with patch("app.services.retrieval.emb_service.embed_query",
+                   side_effect=fake_embed), \
+             patch("app.services.retrieval.qdrant_service.search_similar",
+                   new_callable=AsyncMock, return_value=[]):
+            await retrieve(long_q)
+
+        assert len(captured_texts) == 1
+        assert captured_texts[0] == long_q
+        assert SHORT_QUERY_SUFFIX not in captured_texts[0]
+
+    @pytest.mark.asyncio
+    async def test_original_question_stored_on_result(self):
+        """RetrievalResult.original_question must be the user's question, no suffix."""
+        with patch("app.services.retrieval.emb_service.embed_query",
+                   new_callable=AsyncMock, return_value=_unit_vec()), \
+             patch("app.services.retrieval.qdrant_service.search_similar",
+                   new_callable=AsyncMock, return_value=[]):
+            result = await retrieve("what is float")
+
+        assert result.original_question == "what is float"
+        assert SHORT_QUERY_SUFFIX not in result.original_question
+
+    @pytest.mark.asyncio
+    async def test_search_text_has_suffix_on_result(self):
+        """RetrievalResult.search_text must carry the expanded text."""
+        with patch("app.services.retrieval.emb_service.embed_query",
+                   new_callable=AsyncMock, return_value=_unit_vec()), \
+             patch("app.services.retrieval.qdrant_service.search_similar",
+                   new_callable=AsyncMock, return_value=[]):
+            result = await retrieve("what is float")
+
+        assert SHORT_QUERY_SUFFIX in result.search_text
+
+    @pytest.mark.asyncio
+    async def test_trailing_question_mark_still_expands(self):
+        """'what is float?' (with ?) must expand the same as 'what is float'."""
+        captured_texts: list[str] = []
+
+        async def fake_embed(text: str, **kwargs):
+            captured_texts.append(text)
+            return _unit_vec()
+
+        with patch("app.services.retrieval.emb_service.embed_query",
+                   side_effect=fake_embed), \
+             patch("app.services.retrieval.qdrant_service.search_similar",
+                   new_callable=AsyncMock, return_value=[]):
+            await retrieve("what is float?")
+
+        assert SHORT_QUERY_SUFFIX in captured_texts[0]
+
+    @pytest.mark.asyncio
+    async def test_threshold_unchanged_by_expansion(self):
+        """Score threshold must not change due to query expansion."""
+        hits = [
+            _make_scored_point(0.4, _make_payload()),   # below threshold=0.5
+        ]
+        with patch("app.services.retrieval.emb_service.embed_query",
+                   new_callable=AsyncMock, return_value=_unit_vec()), \
+             patch("app.services.retrieval.qdrant_service.search_similar",
+                   new_callable=AsyncMock, return_value=hits):
+            result = await retrieve("what is float")
+
+        # threshold is 0.5, score is 0.4 → should still fail Gate 1
+        assert result.has_evidence is False
+
+
+class TestRagServiceUsesOriginalQuestion:
+    """rag_service must pass original_question (no suffix) to generation."""
+
+    @pytest.fixture(autouse=True)
+    def patch_settings(self):
+        from app.config import Settings
+        settings = Settings(
+            _env_file=None,  # type: ignore[call-arg]
+            google_api_key="fake-key",
+            qdrant_url="https://fake.qdrant.io",
+            qdrant_api_key="fake-qdrant-key",
+            rag_top_k=5,
+            rag_score_threshold=0.5,
+            generation_model="gemini-3.5-flash-lite",
+            embedding_model="gemini-embedding-001",
+            embedding_dimension=3072,
+        )
+        with patch("app.services.rag_service.get_settings", return_value=settings):
+            yield
+
+    @pytest.mark.asyncio
+    async def test_generation_prompt_uses_original_question_not_suffix(self):
+        """The generation prompt must contain the original question, not the expanded one."""
+        import json
+        from unittest.mock import MagicMock
+        from app.services.rag_service import _GenerationResponse, answer
+        from app.services.retrieval import RetrievalResult
+        from app.schemas import Source
+
+        original = "what is float"
+        search   = f"what is float {SHORT_QUERY_SUFFIX}"
+
+        src = Source(title="Variables", section="Float", path="/m01/vars", score=0.8)
+        retrieval = RetrievalResult(
+            sources=[src],
+            passages=["A float is a decimal number."],
+            original_question=original,
+            search_text=search,
+            top_score=0.8,
+            all_candidates_count=1,
+            kept_count=1,
+        )
+
+        gen = _GenerationResponse(supported=True, answer="A float is a decimal.", used_chunks=[0])
+        mock_response = MagicMock()
+        mock_response.parsed = gen
+        mock_response.text = json.dumps({"supported": True, "answer": "A float is a decimal.", "used_chunks": [0]})
+
+        captured_prompts: list[str] = []
+
+        async def fake_generate(model, contents, config):
+            captured_prompts.append(contents)
+            return mock_response
+
+        with patch("app.services.rag_service.retrieve",
+                   new_callable=AsyncMock, return_value=retrieval), \
+             patch("app.services.rag_service._get_client") as mock_c:
+            mock_c.return_value.aio.models.generate_content = fake_generate
+            await answer("what is float")
+
+        assert len(captured_prompts) == 1
+        prompt_text = captured_prompts[0]
+        # Prompt must contain the original question
+        assert original in prompt_text
+        # Prompt must NOT contain the suffix
+        assert SHORT_QUERY_SUFFIX not in prompt_text

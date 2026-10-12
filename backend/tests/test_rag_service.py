@@ -45,6 +45,8 @@ def _make_retrieval_result(
     return RetrievalResult(
         sources=sources,
         passages=passages,
+        original_question="What is Python?",
+        search_text="What is Python?",
         top_score=top_score,
         all_candidates_count=kept_count,
         kept_count=kept_count,
@@ -53,7 +55,10 @@ def _make_retrieval_result(
 
 def _empty_retrieval() -> RetrievalResult:
     return RetrievalResult(
-        sources=[], passages=[], top_score=0.0,
+        sources=[], passages=[],
+        original_question="test question",
+        search_text="test question",
+        top_score=0.0,
         all_candidates_count=0, kept_count=0,
     )
 
@@ -296,6 +301,8 @@ class TestBuildSources:
         return RetrievalResult(
             sources=sources,
             passages=["t"] * len(sources),
+            original_question="test",
+            search_text="test",
             top_score=0.9,
             all_candidates_count=len(sources),
             kept_count=len(sources),
