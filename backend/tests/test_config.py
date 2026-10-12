@@ -51,7 +51,14 @@ def test_qdrant_configured_true_when_both_set():
 
 
 def test_default_models():
-    s = Settings()
+    """Default model names match expected values (ignores any .env overrides)."""
+    # Construct fresh Settings without reading from .env so we test the coded defaults.
+    s = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        google_api_key=None,
+        qdrant_url=None,
+        qdrant_api_key=None,
+    )
     assert s.embedding_model == "gemini-embedding-001"
     assert s.generation_model == "gemini-2.0-flash"
     assert s.embedding_dimension == 3072

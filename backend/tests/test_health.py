@@ -1,6 +1,7 @@
 """Tests for GET /health."""
 
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -35,18 +36,19 @@ def test_health_does_not_expose_secret_values():
 
 def test_health_unconfigured_environment(monkeypatch):
     """When no keys are set, health still returns 200 with configured=False."""
-    # Clear the lru_cache so Settings re-reads the patched env.
-    from app.config import get_settings
-    get_settings.cache_clear()
+    from app.config import get_settings, Settings
 
-    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-    monkeypatch.delenv("QDRANT_URL", raising=False)
-    monkeypatch.delenv("QDRANT_API_KEY", raising=False)
+    no_key_settings = Settings(
+        _env_file=None,  # type: ignore[call-arg]
+        google_api_key=None,
+        qdrant_url=None,
+        qdrant_api_key=None,
+    )
 
-    response = client.get("/health")
+    with patch("app.api.health.get_settings", return_value=no_key_settings):
+        response = client.get("/health")
+
     assert response.status_code == 200
     data = response.json()
     assert data["google_configured"] is False
     assert data["qdrant_configured"] is False
-
-    get_settings.cache_clear()

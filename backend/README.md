@@ -72,13 +72,15 @@ rag_service.answer()
 
 ## Model choices
 
-- **`gemini-embedding-001`**: Google's current GA embedding model (released July 2025).
-  Replaces the deprecated `text-embedding-004`. Default dimension 3072 gives
-  highest quality; can be reduced to 1536 or 768 via `EMBEDDING_DIMENSION`.
+- **`gemini-embedding-001`**: Google's current GA text embedding model (stable, April 2026).
+  - Replaces the deprecated `text-embedding-004` (shut down Jan 2026).
+  - Text-only input — the right choice for RAG over Markdown book content.
+  - Supports `task_type`: `RETRIEVAL_QUERY` for questions, `RETRIEVAL_DOCUMENT` for passages — this asymmetric encoding improves retrieval quality.
+  - Supports `output_dimensionality` 128–3072; recommended values: **768, 1536, 3072**.
+  - **Normalization**: at 3072 dims the API always returns L2-normalized vectors. At 768 or 1536, `gemini-embedding-001` does NOT auto-normalize (unlike Gemini Embedding 2); the service normalizes manually before storing/comparing. This is required for correct cosine similarity in Qdrant.
+  - **Default dimension: 3072** — highest quality per Google's MTEB benchmarks; storage cost is acceptable for a book-sized corpus. Change `EMBEDDING_DIMENSION` to 1536 or 768 to trade quality for storage.
 
-- **`gemini-2.0-flash`**: Current standard fast-generation model. Good balance of
-  speed, cost and quality for a Q&A assistant. Can be changed to `gemini-2.0-pro`
-  for higher quality at higher cost.
+- **`gemini-2.0-flash`**: Current standard fast-generation model. Good balance of speed, cost and quality for a Q&A assistant. Can be changed to `gemini-2.5-pro` for higher quality at higher cost.
 
 ## Deployment
 
