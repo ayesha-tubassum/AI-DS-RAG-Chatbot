@@ -27,23 +27,23 @@ Python is the main language used in this book. In this module you will learn:
 
 This module is complete and ready to read.
 
-## Upcoming Modules
+## Available Modules
 
-The following modules will extend these foundations. Their status is shown below so you know what to expect.
+The following modules extend these foundations. All currently published modules are available to read.
 
 | Module | Topic | Status |
 | --- | --- | --- |
-| Module 02 | Python for Data Science | Coming soon |
-| Module 03 | Statistics and Math for ML | Coming soon |
-| Module 04 | Machine Learning | Coming soon |
-| Module 05 | Deep Learning | Coming soon |
-| Module 06 | MLOps | Coming soon |
-| Module 07 | Big Data and Cloud | Coming soon |
-| Module 08 | Generative AI and LLMs | Coming soon |
-| Module 09 | Agentic AI | Coming soon |
+| Module 02 | Python for Data Science | Available now |
+| Module 03 | Statistics and Math for ML | Available now |
+| Module 04 | Machine Learning | Available now |
+| Module 05 | Deep Learning | Available now |
+| Module 06 | MLOps | Available now |
+| Module 07 | Big Data and Cloud | Available now |
+| Module 08 | Generative AI and LLMs | Available now |
+| Module 09 | Agentic AI | Available now |
 
 ## Suggested Order
 
 For most readers, the best approach is to read the modules in the order listed above. Each module builds on the one before it, and the projects become more challenging as you progress.
 
-If you are following this roadmap, begin with Module 01. When you feel confident, move to the next available module.
+If you are following this roadmap, begin with Module 01 and move through the available modules in order.

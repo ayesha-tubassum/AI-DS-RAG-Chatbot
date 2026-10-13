@@ -20,8 +20,29 @@ function normalizeFrontMatterTitles(fileContent: string): string {
 const config: Config = {
   title: 'AI & Data Science',
   tagline: 'A clear, practical introduction to intelligent systems and the data behind them.',
-  url: 'https://example.com',
+  // Set DOCUSAURUS_URL in the deployment environment to the public site URL.
+  url: process.env.DOCUSAURUS_URL ?? 'http://localhost:3000',
   baseUrl: '/',
+  favicon: 'img/favicon.ico',
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '32x32',
+        href: '/img/favicon-32.png',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'apple-touch-icon',
+        sizes: '180x180',
+        href: '/img/apple-touch-icon.png',
+      },
+    },
+  ],
   onBrokenLinks: 'throw',
   future: {v4: true},
   customFields: {
