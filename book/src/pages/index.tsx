@@ -27,8 +27,26 @@ function HeroSection(): ReactNode {
           <TypingEffect phrases={phrases} />
           <Link
             className="button button--primary button--lg book-hero__button"
-            to="/module-01-python-foundations/variables-data-types">
-            Start Reading <span aria-hidden="true">→</span>
+            to="/module-01-python-foundations/variables-data-types"
+            aria-label="Start Reading">
+            {/* Left: circular gradient icon badge */}
+            <span className="book-hero__button-badge" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+            </span>
+            {/* Center: label */}
+            <span className="book-hero__button-label">Start Reading</span>
+            {/* Right: arrow */}
+            <span className="book-hero__button-arrow" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </span>
           </Link>
           <p className="book-hero__note">Start with Python. No prior AI experience required.</p>
         </div>
