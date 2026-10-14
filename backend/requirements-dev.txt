@@ -1,0 +1,10 @@
+# Development and testing dependencies — NOT installed in production (Vercel).
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.5
+pytest-asyncio==0.25.3
+anyio==4.9.0
+
+# ── Ingestion scripts (offline, not used by /api/chat at request time) ────────
+python-frontmatter==1.1.0

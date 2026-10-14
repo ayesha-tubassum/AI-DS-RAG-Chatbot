@@ -94,7 +94,202 @@
   padding: 1rem 1.25rem;
 }
 .pagination-nav__link { border-color: var(--ifm-toc-border-color); border-radius: 0.55rem; }
-.footer { padding: 2.5rem 0; }
+/* Hide the default Docusaurus footer wrapper — the swizzled Footer renders its own */
+.footer { display: none; }
+
+/* ─────────────────────────────────────────────
+   Custom footer
+───────────────────────────────────────────── */
+.custom-footer {
+  background: #0d1a18;
+  color: #c8d5d2;
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  border-top: 1px solid rgba(120, 201, 188, 0.18);
+}
+
+.custom-footer__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 3.5rem 2rem 2.5rem;
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 1fr;
+  gap: 3rem;
+}
+
+/* ── Brand / col 1 ── */
+.custom-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+  color: #78c9bc;
+}
+
+.custom-footer__brand-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e8f2f0;
+  letter-spacing: -0.01em;
+}
+
+.custom-footer__desc {
+  color: #8fa8a3;
+  font-size: 0.85rem;
+  margin: 0 0 1.25rem;
+  max-width: 30rem;
+  line-height: 1.6;
+}
+
+.custom-footer__links-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.custom-footer__cta {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #225f5b;
+  color: #e8f2f0 !important;
+  border: 1px solid transparent;
+  text-decoration: none !important;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.custom-footer__cta:hover,
+.custom-footer__cta:focus-visible {
+  background: #2b706b;
+  text-decoration: none !important;
+}
+
+.custom-footer__cta--ghost {
+  background: transparent;
+  border-color: rgba(120, 201, 188, 0.45);
+  color: #78c9bc !important;
+}
+
+.custom-footer__cta--ghost:hover,
+.custom-footer__cta--ghost:focus-visible {
+  background: rgba(120, 201, 188, 0.08);
+  border-color: #78c9bc;
+}
+
+/* ── Headings ── */
+.custom-footer__heading {
+  font-family: var(--ifm-font-family-base);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #78c9bc;
+  margin: 0 0 1rem;
+}
+
+/* ── Nav links ── */
+.custom-footer__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.custom-footer__link {
+  color: #8fa8a3;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.15s;
+}
+
+.custom-footer__link:hover,
+.custom-footer__link:focus-visible {
+  color: #78c9bc;
+  text-decoration: none;
+}
+
+/* ── Author ── */
+.custom-footer__author-name {
+  font-weight: 600;
+  color: #e8f2f0;
+  font-size: 0.95rem;
+  margin: 0 0 0.35rem;
+}
+
+/* ── Social list ── */
+.custom-footer__social {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.custom-footer__social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #8fa8a3;
+  text-decoration: none;
+  font-size: 0.84rem;
+  transition: color 0.15s;
+}
+
+.custom-footer__social-link:hover,
+.custom-footer__social-link:focus-visible {
+  color: #78c9bc;
+  text-decoration: none;
+}
+
+/* ── Bottom bar ── */
+.custom-footer__bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 1rem 2rem;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.custom-footer__copy {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #5a706b;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .custom-footer__inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .custom-footer__inner {
+    grid-template-columns: 1fr;
+    padding: 2.5rem 1.25rem 1.5rem;
+    gap: 2rem;
+  }
+
+  .custom-footer__bottom {
+    padding: 1rem 1.25rem;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .custom-footer__cta,
+  .custom-footer__link,
+  .custom-footer__social-link {
+    transition: none;
+  }
+}
 
 /* ─────────────────────────────────────────────
    Reduced motion – kill all CSS animations

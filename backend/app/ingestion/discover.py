@@ -186,20 +186,29 @@ def validate_paths_against_sitemap(
     """
     Compare computed page_paths against the sitemap.
     Returns warning strings for paths not found in the sitemap.
+
+    Handles any base URL in the sitemap (example.com, localhost:3000, etc.)
+    by stripping the origin generically using urllib.parse.
     """
+    from urllib.parse import urlparse
+
+    def _path_only(loc: str) -> str:
+        """Strip scheme + host + port, keep only the path, strip trailing slash."""
+        return urlparse(loc).path.rstrip("/") or "/"
+
     try:
         import xml.etree.ElementTree as ET
         tree = ET.parse(sitemap_path)
         root = tree.getroot()
         ns   = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
         locs = {
-            elem.text.split("example.com", 1)[-1].rstrip("/")
+            _path_only(elem.text)
             for elem in root.findall(".//sm:loc", ns)
             if elem.text
         }
         if not locs:
             locs = {
-                elem.text.split("example.com", 1)[-1].rstrip("/")
+                _path_only(elem.text)
                 for elem in root.iter()
                 if elem.tag.endswith("loc") and elem.text
             }

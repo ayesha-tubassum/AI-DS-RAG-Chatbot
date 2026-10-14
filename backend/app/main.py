@@ -48,9 +48,10 @@ def create_app() -> FastAPI:
         ),
         version="0.1.0",
         lifespan=lifespan,
-        # Hide /docs and /redoc in production to reduce attack surface.
-        docs_url="/docs" if settings.environment == "development" else None,
-        redoc_url="/redoc" if settings.environment == "development" else None,
+        # Disable all API docs in production to reduce attack surface.
+        docs_url="/docs"       if settings.environment == "development" else None,
+        redoc_url="/redoc"     if settings.environment == "development" else None,
+        openapi_url="/openapi.json" if settings.environment == "development" else None,
     )
 
     # ── CORS ──────────────────────────────────────────────────────────────

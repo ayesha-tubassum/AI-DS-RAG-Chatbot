@@ -85,11 +85,48 @@ rag_service.answer()
 ## Deployment
 
 ### Vercel
-The file `api/index.py` re-exports the FastAPI `app` object. Vercel's Python
-runtime detects it automatically. Set all environment variables in the Vercel
-project dashboard.
+
+The file `api/index.py` exposes the FastAPI `app` object as the Vercel entrypoint.
+`vercel.json` routes all requests to it and sets a 60-second function timeout
+(maximum on the Hobby plan).
+
+**Environment variables to set in the Vercel project dashboard
+(Settings → Environment Variables):**
+
+| Variable | Required | Notes |
+|---|---|---|
+| `GOOGLE_API_KEY` | ✅ | Google AI Studio API key |
+| `QDRANT_URL` | ✅ | Qdrant Cloud cluster URL |
+| `QDRANT_API_KEY` | ✅ | Qdrant Cloud API key |
+| `ENVIRONMENT` | ✅ | Set to `production` |
+| `ALLOWED_ORIGINS` | ✅ | Comma-separated list of your frontend URL(s), e.g. `https://your-book.vercel.app` |
+| `QDRANT_COLLECTION` | optional | Default: `ai_ds_book` |
+| `EMBEDDING_MODEL` | optional | Default: `gemini-embedding-001` |
+| `EMBEDDING_DIMENSION` | optional | Default: `3072` |
+| `GENERATION_MODEL` | optional | Default: `gemini-2.0-flash` |
+| `RAG_TOP_K` | optional | Default: `5` |
+| `RAG_SCORE_THRESHOLD` | optional | Default: `0.65` |
+| `LOG_LEVEL` | optional | Default: `INFO` |
+
+> **Do not** set `GOOGLE_API_KEY` or any secret in `vercel.json` or commit it to git.
+
+**Production behaviour:**
+- `/docs`, `/redoc`, and `/openapi.json` are disabled.
+- CORS is restricted to `ALLOWED_ORIGINS` only (no wildcard).
+- `/health` remains accessible.
+
+**Bundle size estimate:** The runtime dependencies (fastapi, google-genai, qdrant-client,
+pydantic, httpx + their transitive deps including numpy and grpcio) install to roughly
+150–200 MB uncompressed, well within Vercel's 500 MB Python limit.
+
+**To deploy:**
+```bash
+cd backend
+vercel --prod
+```
 
 ### Render / Railway
 ```
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
+Set the same environment variables listed above in the platform's dashboard.

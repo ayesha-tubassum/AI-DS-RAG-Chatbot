@@ -98,22 +98,8 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      links: [
-        {
-          title: 'The book',
-          items: [
-            {
-              label: 'Start reading',
-              to: '/module-01-python-foundations/variables-data-types',
-            },
-            {
-              label: 'Module 01: Python Foundations',
-              to: '/module-01-python-foundations/variables-data-types',
-            },
-          ],
-        },
-      ],
-      copyright: `© ${new Date().getFullYear()} AI & Data Science.`,
+      links: [],
+      copyright: '.',
     },
     prism: {
       theme: prismThemes.github,
